@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify
+﻿from flask import Flask, request, jsonify
 from flask_cors import CORS
-from db import db
+from db import get_db_connection
 
 app = Flask(__name__)
 CORS(app)
+
+db = get_db_connection()
 
 
 @app.route("/")
@@ -19,6 +21,7 @@ def register():
     email = data["email"]
     password = data["password"]
 
+    db = get_db_connection()
     cursor = db.cursor()
 
     query = """
@@ -33,6 +36,7 @@ def register():
 
     return jsonify({"message": "User registered successfully"})
 
+
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
@@ -40,6 +44,7 @@ def login():
     email = data["email"]
     password = data["password"]
 
+    db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
     query = """
@@ -60,6 +65,7 @@ def login():
             "message": "Invalid email or password"
         }), 401
 
+
 @app.route("/income", methods=["POST"])
 def add_income():
     data = request.json
@@ -67,6 +73,7 @@ def add_income():
     user_id = data["user_id"]
     amount = data["amount"]
 
+    db = get_db_connection()
     cursor = db.cursor()
 
     query = """
@@ -81,17 +88,27 @@ def add_income():
         "message": "Income added successfully"
     })
 
+
 @app.route("/income", methods=["GET"])
 def get_income():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Missing user_id"}), 400
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        return jsonify({"error": "Invalid user_id"}), 400
+
+    db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
-    query = "SELECT * FROM income"
-
-    cursor.execute(query)
-
+    query = "SELECT * FROM income WHERE user_id = %s"
+    cursor.execute(query, (user_id,))
     income_data = cursor.fetchall()
 
     return jsonify(income_data)
+
 
 @app.route("/expenses", methods=["POST"])
 def add_expense():
@@ -103,6 +120,7 @@ def add_expense():
     category = data["category"]
     transaction_date = data["transaction_date"]
 
+    db = get_db_connection()
     cursor = db.cursor()
 
     query = """
@@ -126,17 +144,27 @@ def add_expense():
         "message": "Expense added successfully"
     })
 
+
 @app.route("/expenses", methods=["GET"])
 def get_expenses():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Missing user_id"}), 400
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        return jsonify({"error": "Invalid user_id"}), 400
+
+    db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
-    query = "SELECT * FROM transactions"
-
-    cursor.execute(query)
-
+    query = "SELECT * FROM transactions WHERE user_id = %s ORDER BY id DESC"
+    cursor.execute(query, (user_id,))
     expenses = cursor.fetchall()
 
     return jsonify(expenses)
+
 
 @app.route("/budget", methods=["POST"])
 def add_budget():
@@ -146,6 +174,7 @@ def add_budget():
     category = data["category"]
     budget_amount = data["budget_amount"]
 
+    db = get_db_connection()
     cursor = db.cursor()
 
     query = """
@@ -160,28 +189,52 @@ def add_budget():
         "message": "Budget added successfully"
     })
 
+
 @app.route("/budget", methods=["GET"])
 def get_budget():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Missing user_id"}), 400
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        return jsonify({"error": "Invalid user_id"}), 400
+
+    db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
-    query = "SELECT * FROM budgets"
-
-    cursor.execute(query)
-
+    query = "SELECT * FROM budgets WHERE user_id = %s ORDER BY id DESC"
+    cursor.execute(query, (user_id,))
     budgets = cursor.fetchall()
 
     return jsonify(budgets)
 
+
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Missing user_id"}), 400
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        return jsonify({"error": "Invalid user_id"}), 400
+
+    db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
-    # Total income
-    cursor.execute("SELECT IFNULL(SUM(amount),0) AS total_income FROM income")
+    cursor.execute(
+        "SELECT IFNULL(SUM(amount),0) AS total_income FROM income WHERE user_id = %s",
+        (user_id,)
+    )
     total_income = cursor.fetchone()["total_income"]
 
-    # Total expenses
-    cursor.execute("SELECT IFNULL(SUM(amount),0) AS total_expenses FROM transactions")
+    cursor.execute(
+        "SELECT IFNULL(SUM(amount),0) AS total_expenses FROM transactions WHERE user_id = %s",
+        (user_id,)
+    )
     total_expenses = cursor.fetchone()["total_expenses"]
 
     savings = total_income - total_expenses

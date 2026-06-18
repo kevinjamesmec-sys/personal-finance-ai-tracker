@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import axios from "axios";
 
 function Dashboard() {
@@ -7,19 +8,43 @@ function Dashboard() {
     total_expenses: 0,
     savings: 0,
   });
+  const [transactions, setTransactions] = useState([]);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
   const fetchDashboard = async () => {
+    if (!userId) return;
+
     try {
-      const response = await axios.get("http://127.0.0.1:5000/dashboard");
+      const response = await axios.get(`http://127.0.0.1:5000/dashboard?user_id=${userId}`);
       setDashboard(response.data);
     } catch (error) {
       console.error(error);
     }
   };
 
+  const fetchTransactions = async () => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/expenses?user_id=${userId}`);
+      setTransactions(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchDashboard();
-  }, []);
+    if (userId) {
+      fetchDashboard();
+      fetchTransactions();
+    }
+  }, [userId]);
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div
@@ -75,23 +100,13 @@ function Dashboard() {
             </thead>
 
             <tbody>
-              <tr>
-                <td>Swiggy</td>
-                <td>Food</td>
-                <td>₹450</td>
-              </tr>
-
-              <tr>
-                <td>Uber</td>
-                <td>Transport</td>
-                <td>₹200</td>
-              </tr>
-
-              <tr>
-                <td>Amazon</td>
-                <td>Shopping</td>
-                <td>₹1000</td>
-              </tr>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>{transaction.expense_name}</td>
+                  <td>{transaction.category}</td>
+                  <td>₹{transaction.amount}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

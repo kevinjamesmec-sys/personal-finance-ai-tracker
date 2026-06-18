@@ -1,13 +1,18 @@
 ﻿import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import axios from "axios";
 
 function Income() {
   const [amount, setAmount] = useState("");
   const [incomes, setIncomes] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
   const fetchIncome = async () => {
+    if (!userId) return;
+
     try {
-      const response = await axios.get("http://127.0.0.1:5000/income");
+      const response = await axios.get(`http://127.0.0.1:5000/income?user_id=${userId}`);
       setIncomes(response.data);
     } catch (error) {
       console.error(error);
@@ -16,14 +21,18 @@ function Income() {
 
   useEffect(() => {
     fetchIncome();
-  }, []);
+  }, [userId]);
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       await axios.post("http://127.0.0.1:5000/income", {
-        user_id: 1,
+        user_id: userId,
         amount: amount,
       });
 
@@ -44,16 +53,12 @@ function Income() {
           <div className="card shadow">
             <div className="card-body">
 
-              <h2 className="mb-4">
-                Income Management
-              </h2>
+              <h2 className="mb-4">Income Management</h2>
 
               <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Monthly Income
-                  </label>
+                  <label className="form-label">Monthly Income</label>
 
                   <input
                     type="number"
@@ -64,10 +69,7 @@ function Income() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                >
+                <button type="submit" className="btn btn-success">
                   Save Income
                 </button>
 

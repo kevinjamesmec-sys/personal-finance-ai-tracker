@@ -1,14 +1,19 @@
 ﻿import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import axios from "axios";
 
 function Budget() {
   const [category, setCategory] = useState("Food");
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgets, setBudgets] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
   const fetchBudgets = async () => {
+    if (!userId) return;
+
     try {
-      const response = await axios.get("http://127.0.0.1:5000/budget");
+      const response = await axios.get(`http://127.0.0.1:5000/budget?user_id=${userId}`);
       setBudgets(response.data);
     } catch (error) {
       console.error(error);
@@ -17,14 +22,18 @@ function Budget() {
 
   useEffect(() => {
     fetchBudgets();
-  }, []);
+  }, [userId]);
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       await axios.post("http://127.0.0.1:5000/budget", {
-        user_id: 1,
+        user_id: userId,
         category: category,
         budget_amount: budgetAmount,
       });
@@ -47,16 +56,12 @@ function Budget() {
           <div className="card shadow">
             <div className="card-body">
 
-              <h2 className="mb-4">
-                Budget Management
-              </h2>
+              <h2 className="mb-4">Budget Management</h2>
 
               <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Category
-                  </label>
+                  <label className="form-label">Category</label>
 
                   <select
                     className="form-select"
@@ -73,9 +78,7 @@ function Budget() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Monthly Budget Amount
-                  </label>
+                  <label className="form-label">Monthly Budget Amount</label>
 
                   <input
                     type="number"
@@ -86,10 +89,7 @@ function Budget() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="btn btn-warning"
-                >
+                <button type="submit" className="btn btn-warning">
                   Save Budget
                 </button>
 

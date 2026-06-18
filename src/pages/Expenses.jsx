@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import axios from "axios";
 
 function Expenses() {
@@ -6,10 +7,14 @@ function Expenses() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [expenses, setExpenses] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
   const fetchExpenses = async () => {
+    if (!userId) return;
+
     try {
-      const response = await axios.get("http://127.0.0.1:5000/expenses");
+      const response = await axios.get(`http://127.0.0.1:5000/expenses?user_id=${userId}`);
       setExpenses(response.data);
     } catch (error) {
       console.error(error);
@@ -18,14 +23,18 @@ function Expenses() {
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [userId]);
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       await axios.post("http://127.0.0.1:5000/expenses", {
-        user_id: 1,
+        user_id: userId,
         expense_name: expenseName,
         amount: amount,
         category: category,
@@ -51,16 +60,12 @@ function Expenses() {
           <div className="card shadow">
             <div className="card-body">
 
-              <h2 className="mb-4">
-                Expense Management
-              </h2>
+              <h2 className="mb-4">Expense Management</h2>
 
               <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Expense Name
-                  </label>
+                  <label className="form-label">Expense Name</label>
 
                   <input
                     type="text"
@@ -72,9 +77,7 @@ function Expenses() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Amount
-                  </label>
+                  <label className="form-label">Amount</label>
 
                   <input
                     type="number"
@@ -86,9 +89,7 @@ function Expenses() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">
-                    Category
-                  </label>
+                  <label className="form-label">Category</label>
 
                   <select
                     className="form-select"
@@ -104,10 +105,7 @@ function Expenses() {
                   </select>
                 </div>
 
-                <button
-                  type="submit"
-                  className="btn btn-danger"
-                >
+                <button type="submit" className="btn btn-danger">
                   Add Expense
                 </button>
 
