@@ -9,6 +9,7 @@ function Dashboard() {
     savings: 0,
   });
   const [transactions, setTransactions] = useState([]);
+  const [budgetOverview, setBudgetOverview] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
@@ -19,6 +20,7 @@ function Dashboard() {
     try {
       const response = await axios.get(`http://127.0.0.1:5000/dashboard?user_id=${userId}`);
       setDashboard(response.data);
+      setBudgetOverview(response.data.budget_overview || []);
     } catch (error) {
       console.error(error);
     }
@@ -117,27 +119,47 @@ function Dashboard() {
         <div className="card-body">
           <h4>Budget Overview</h4>
 
-          <p>Food Budget: ₹5000 / ₹7000</p>
-
-          <div className="progress mb-3">
-            <div
-              className="progress-bar bg-danger"
-              style={{ width: "70%" }}
-            >
-              70%
+          {budgetOverview.length === 0 ? (
+            <div className="alert alert-secondary">
+              No budgets found yet. Add budgets in the Budget page to track progress.
             </div>
-          </div>
+          ) : (
+            budgetOverview.map((item) => {
+              const barClass = item.percent >= 100 ? "bg-danger" : item.percent >= 75 ? "bg-warning" : "bg-success";
 
-          <p>Shopping Budget: ₹2000 / ₹3000</p>
+              return (
+                <div key={item.category} className="mb-4">
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      <strong>{item.category}</strong>
+                    </div>
+                    <div>
+                      ₹{item.spent.toFixed(2)} / ₹{item.budget_amount.toFixed(2)}
+                    </div>
+                  </div>
 
-          <div className="progress">
-            <div
-              className="progress-bar bg-warning"
-              style={{ width: "60%" }}
-            >
-              60%
-            </div>
-          </div>
+                  <div className="progress mb-2">
+                    <div
+                      className={`progress-bar ${barClass}`}
+                      role="progressbar"
+                      style={{ width: `${item.percent}%` }}
+                      aria-valuenow={item.percent}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      {item.percent}%
+                    </div>
+                  </div>
+
+                  <div className="small text-muted">
+                    {item.remaining > 0
+                      ? `Remaining ₹${item.remaining.toFixed(2)} of budget`
+                      : "Budget exceeded"}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

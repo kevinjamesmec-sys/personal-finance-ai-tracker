@@ -239,10 +239,41 @@ def dashboard():
 
     savings = total_income - total_expenses
 
+    cursor.execute(
+        "SELECT category, IFNULL(SUM(budget_amount),0) AS budget_amount FROM budgets WHERE user_id = %s GROUP BY category",
+        (user_id,)
+    )
+    budgets = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT category, IFNULL(SUM(amount),0) AS spent FROM transactions WHERE user_id = %s GROUP BY category",
+        (user_id,)
+    )
+    spent_rows = cursor.fetchall()
+    spent_by_category = {row["category"]: float(row["spent"]) for row in spent_rows}
+
+    budget_overview = []
+    for budget in budgets:
+        category = budget["category"]
+        budget_amount = float(budget["budget_amount"])
+        spent = spent_by_category.get(category, 0.0)
+        percent = 0.0
+        if budget_amount > 0:
+            percent = min(100.0, round((spent / budget_amount) * 100, 1))
+
+        budget_overview.append({
+            "category": category,
+            "budget_amount": budget_amount,
+            "spent": spent,
+            "percent": percent,
+            "remaining": float(max(0, budget_amount - spent))
+        })
+
     return jsonify({
         "total_income": float(total_income),
         "total_expenses": float(total_expenses),
-        "savings": float(savings)
+        "savings": float(savings),
+        "budget_overview": budget_overview
     })
 
 
