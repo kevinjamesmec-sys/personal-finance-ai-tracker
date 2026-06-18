@@ -1,12 +1,34 @@
+﻿import { useState, useEffect } from "react";
+import axios from "axios";
+
 function Dashboard() {
+  const [dashboard, setDashboard] = useState({
+    total_income: 0,
+    total_expenses: 0,
+    savings: 0,
+  });
+
+  const fetchDashboard = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:5000/dashboard");
+      setDashboard(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
   return (
     <div
-  className="container mt-4"
-  style={{
-    background: "rgba(255,255,255,0.3)",
-    minHeight: "100vh"
-  }}
->
+      className="container mt-4"
+      style={{
+        background: "rgba(255,255,255,0.3)",
+        minHeight: "100vh"
+      }}
+    >
       <h1 className="mb-4">Personal Finance Dashboard</h1>
 
       <div className="row">
@@ -14,7 +36,7 @@ function Dashboard() {
           <div className="card text-white bg-success mb-3 shadow">
             <div className="card-body">
               <h5>Total Income</h5>
-              <h3>₹50,000</h3>
+              <h3>₹{dashboard.total_income}</h3>
             </div>
           </div>
         </div>
@@ -23,7 +45,7 @@ function Dashboard() {
           <div className="card text-white bg-danger mb-3 shadow">
             <div className="card-body">
               <h5>Total Expenses</h5>
-              <h3>₹35,000</h3>
+              <h3>₹{dashboard.total_expenses}</h3>
             </div>
           </div>
         </div>
@@ -32,7 +54,7 @@ function Dashboard() {
           <div className="card text-white bg-primary mb-3 shadow">
             <div className="card-body">
               <h5>Savings</h5>
-              <h3>₹15,000</h3>
+              <h3>₹{dashboard.savings}</h3>
             </div>
           </div>
         </div>

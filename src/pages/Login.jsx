@@ -1,4 +1,29 @@
+import { useState } from "react";
+import axios from "axios";
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const handleLogin = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await axios.post(
+      "http://127.0.0.1:5000/login",
+      {
+        email: email,
+        password: password,
+      }
+    );
+
+    alert(response.data.message);
+    console.log(response.data);
+
+  } catch (error) {
+    alert("Login failed");
+    console.log(error);
+  }
+};
+
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
@@ -12,7 +37,7 @@ function Login() {
                 Login
               </h2>
 
-              <form>
+              <form onSubmit={handleLogin}>
 
                 <div className="mb-3">
                   <label className="form-label">
@@ -23,7 +48,9 @@ function Login() {
                     type="email"
                     className="form-control"
                     placeholder="Enter Email"
-                  />
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}                 
+                 />
                 </div>
 
                 <div className="mb-3">
@@ -35,6 +62,8 @@ function Login() {
                     type="password"
                     className="form-control"
                     placeholder="Enter Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
 
