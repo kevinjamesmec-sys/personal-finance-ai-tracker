@@ -50,6 +50,25 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/budget"
+  element={
+    <ProtectedRoute>
+      <Budget />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/upload"
+  element={
+    <ProtectedRoute>
+      <TransactionUpload />
+    </ProtectedRoute>
+  }
+/>
+
+<Route path="/insights" element={<Insights />} />
         <Route path="/insights" element={<Insights />} />
       </Routes>
     </BrowserRouter>
