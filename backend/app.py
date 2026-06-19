@@ -283,4 +283,64 @@ if __name__ == "__main__":
     app.run(debug=True)
 
 @app.route("/upload-transactions", methods=["POST"])
+def upload_transactions():
+
+    file = request.files["file"]
+    user_id = request.form["user_id"]
+
+    file_path = file.filename
+    file.save(file_path)
+
+    transactions = process_csv(file_path)
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    for transaction in transactions:
+
+        query = """
+        INSERT INTO transactions
+        (user_id, expense_name, amount, category, transaction_date)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        values = (
+            user_id,
+            transaction["expense_name"],
+            transaction["amount"],
+            transaction["category"],
+            transaction["transaction_date"]
+        )
+
+        cursor.execute(query, values)
+
+    db.commit()
+
+    return jsonify({
+        "message": "Transactions uploaded successfully"
+    })
 @app.route("/category-spending", methods=["GET"])
+def category_spending():
+
+    user_id = request.args.get("user_id")
+
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+
+    query = """
+    SELECT category,
+           SUM(amount) AS total
+    FROM transactions
+    WHERE user_id = %s
+    GROUP BY category
+    """
+
+    cursor.execute(query, (user_id,))
+    rows = cursor.fetchall()
+
+    result = {}
+
+    for row in rows:
+        result[row["category"]] = float(row["total"])
+
+    return jsonify(result)
