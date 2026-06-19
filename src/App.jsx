@@ -8,7 +8,7 @@ import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Budget from "./pages/Budget";
 import Insights from "./pages/Insights";
-
+import TransactionUpload from "./pages/TransactionUpload";
 
 function App() {
   return (
