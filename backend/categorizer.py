@@ -35,6 +35,9 @@ CATEGORY_KEYWORDS = {
 
 def categorize_transaction(description):
 
+    if not description
+        return "Other"
+
     description = description.lower()
 
     for category, keywords in CATEGORY_KEYWORDS.items():
