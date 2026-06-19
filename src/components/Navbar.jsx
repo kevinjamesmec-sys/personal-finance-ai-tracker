@@ -43,6 +43,10 @@ function Navbar() {
                 Budget
               </Link>
 
+              <Link className="nav-link" to="/upload">
+                Upload CSV
+              </Link>
+
               <Link className="nav-link" to="/insights">
                 Insights
               </Link>
