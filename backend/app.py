@@ -290,7 +290,7 @@ def upload_transactions():
     file = request.files["file"]
     user_id = request.form["user_id"]
 
-    file_path = file.filename
+    file_path = os.path.join("uploads", file.filename)
     file.save(file_path)
 
     transactions = process_csv(file_path)
