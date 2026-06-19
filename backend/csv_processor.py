@@ -15,7 +15,7 @@ def process_csv(file_path):
             transaction = {
                 "transaction_date": row["Date"],
                 "expense_name": row["Description"],
-                "amount": float(row["Amount"]),
+                "amount": float(row["Amount"].strip()),
                 "category": categorize_transaction(
                     row["Description"]
                 )
